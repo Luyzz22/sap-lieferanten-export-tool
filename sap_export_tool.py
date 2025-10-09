@@ -50,13 +50,90 @@ def lade_sanktionsliste():
         log_message(f"Fehler beim Laden: {e}")
         return []
 
-def pruefe_sanktionsliste(firmenname, sanktionsliste):
+def bereinige_firmenname_fuer_matching(name):
+    """
+    Bereinigt Firmenname für intelligentes Matching:
+    - Lowercase
+    - Entfernt Sonderzeichen
+    - Entfernt Stopwörter (GmbH, AG, etc.)
+    - Gibt Set von Wörtern zurück
+    """
+    if pd.isna(name) or name == "":
+        return set()
+    
+    # Stopwörter die ignoriert werden
+    stopwords = {
+        'gmbh', 'ag', 'kg', 'co', 'ltd', 'inc', 'se', 'sa',
+        '&', 'und', 'and', 'et', 'the', 'de', 'la', 'le',
+        'mbh', 'ohg', 'gbr', 'ug', 'eg', 'ev'
+    }
+    
+    # Lowercase und Sonderzeichen entfernen
+    name_clean = str(name).lower().strip()
+    # Ersetze Sonderzeichen durch Leerzeichen
+    name_clean = re.sub(r'[^a-zäöüß0-9\s]', ' ', name_clean)
+    # Mehrfache Leerzeichen entfernen
+    name_clean = re.sub(r'\s+', ' ', name_clean)
+    
+    # In Wörter splitten und Stopwörter entfernen
+    words = set([w for w in name_clean.split() if w not in stopwords and len(w) > 1])
+    
+    return words
+
+def pruefe_sanktionsliste_optimiert(firmenname, sanktionsliste, verbose=False):
+    """
+    OPTIMIERTE VERSION: Word-Based Matching
+    
+    Prüft ob ALLE wichtigen Wörter aus der Sanktionsliste
+    im Firmennamen vorkommen.
+    
+    WICHTIG: Mindestens 2 Wörter müssen in der Sanktionsliste sein,
+    sonst zu viele False Positives!
+    
+    Beispiele:
+    - "Schwarz Group AG" matched "schwarz group" ✓ (2 Wörter)
+    - "Schwarz Industries" matched "schwarz group" ✗ (group fehlt!)
+    - "Mueller Schwarz KG" matched "schwarz group" ✗ (group fehlt!)
+    - "Krüger & Sons GmbH" matched "krüger sons" ✓ (2 Wörter)
+    - "Hartmann Trading" matched "hartmann ag" ✗ (nur 1 Wort nach Stopwörtern!)
+    
+    Args:
+        firmenname: Name der zu prüfenden Firma
+        sanktionsliste: Liste von sanktionierten Firmennamen
+        verbose: Wenn True, logge jeden Treffer
+    
+    Returns:
+        True wenn Treffer, False wenn kein Treffer
+    """
     if not sanktionsliste or pd.isna(firmenname) or firmenname == "":
         return False
-    firmenname_clean = str(firmenname).lower().strip()
+    
+    # Firmenname bereinigen
+    firmenname_words = bereinige_firmenname_fuer_matching(firmenname)
+    
+    if not firmenname_words:
+        return False
+    
+    # Prüfe gegen jede Sanktion
     for sanktion in sanktionsliste:
-        if sanktion in firmenname_clean:
+        sanktion_words = bereinige_firmenname_fuer_matching(sanktion)
+        
+        if not sanktion_words:
+            continue
+        
+        # SCHUTZ: Mindestens 2 Wörter müssen in Sanktionsliste sein
+        # Sonst zu viele False Positives (z.B. nur "Hartmann")
+        if len(sanktion_words) < 2:
+            if verbose:
+                log_message(f"ÜBERSPRUNGEN: '{sanktion}' hat nur {len(sanktion_words)} Wort(e) - zu unspezifisch")
+            continue
+        
+        # WICHTIG: ALLE Wörter aus Sanktionsliste müssen im Firmennamen sein
+        if sanktion_words.issubset(firmenname_words):
+            if verbose:
+                log_message(f"TREFFER: '{firmenname}' matched '{sanktion}' (Wörter: {sanktion_words})")
             return True
+    
     return False
 
 def bestimme_farbkategorie(row):
@@ -71,7 +148,7 @@ def bestimme_farbkategorie(row):
 
 def hauptprogramm():
     print("=" * 70)
-    print("SAP LIEFERANTEN-EXPORT v2.2 (mit Dashboard)")
+    print("SAP LIEFERANTEN-EXPORT v2.3 (mit optimiertem Sanktionscheck)")
     print("=" * 70)
     log_message("=== EXPORT GESTARTET ===")
     
@@ -90,7 +167,12 @@ def hauptprogramm():
     
     df['Telefon'] = df['Telefon'].apply(bereinige_telefonnummer)
     df['Vollstaendig'] = df.apply(pruefe_vollstaendigkeit, axis=1)
-    df['Sanktion'] = df['Name'].apply(lambda x: pruefe_sanktionsliste(x, sanktionsliste))
+    
+    # OPTIMIERTER SANKTIONSCHECK (mit verbose=True für Logging)
+    df['Sanktion'] = df['Name'].apply(
+        lambda x: pruefe_sanktionsliste_optimiert(x, sanktionsliste, verbose=True)
+    )
+    
     df['Farbkategorie'] = df.apply(bestimme_farbkategorie, axis=1)
     
     anzahl_unvollstaendig = len(df[df['Vollstaendig'] == False])
@@ -112,7 +194,7 @@ def hauptprogramm():
     kritisch = len(df[(df['Name'] == '') | (df['Land'] == '')])
     
     with pd.ExcelWriter(OUTPUT_EXCEL, engine='openpyxl') as writer:
-        # SHEET 0: DASHBOARD (NEU!)
+        # SHEET 0: DASHBOARD
         dashboard_data = {
             'Kennzahl': [
                 'GESAMTANZAHL LIEFERANTEN',
@@ -198,14 +280,14 @@ def hauptprogramm():
         # Kritische Werte rot markieren
         rot_bg = PatternFill(start_color="FFB6C1", end_color="FFB6C1", fill_type="solid")
         if anzahl_rot > 0:
-            ws['B10'].fill = rot_bg  # Zeile mit Sanktionen
+            ws['B10'].fill = rot_bg
         if kritisch > 0:
-            ws['B14'].fill = rot_bg  # Zeile mit kritischen Lieferanten
+            ws['B14'].fill = rot_bg
         
         # Fette Überschriften
-        ws['A3'].font = Font(bold=True, size=12)  # GESAMTANZAHL
-        ws['A7'].font = Font(bold=True, size=12)  # FARBVERTEILUNG
-        ws['A13'].font = Font(bold=True, size=12)  # KRITISCH
+        ws['A3'].font = Font(bold=True, size=12)
+        ws['A7'].font = Font(bold=True, size=12)
+        ws['A13'].font = Font(bold=True, size=12)
         
         log_message("Dashboard formatiert")
     
