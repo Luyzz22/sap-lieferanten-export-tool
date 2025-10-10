@@ -239,6 +239,45 @@ Datenbereinigung und Excel-Export
 Feedback und Verbesserungsvorschläge willkommen!
 Kontakt: Luis@schenk.com
 
+---
+
+## 🏢 Enterprise-Version
+
+**Für Unternehmenskunden und größere Projekte verfügbar:**
+
+### 🚀 Erweiterte Funktionen:
+- **CLI-Interface**: Vollständige Kommandozeilen-Steuerung mit Parametern
+- **Config-Management**: YAML/JSON-basierte Konfiguration für verschiedene Umgebungen
+- **Docker-Deployment**: Containerisierte Bereitstellung, ready for Kubernetes
+- **API-Integration**: Automatischer Download und Update von EU/OFAC/UN/UK-Sanktionslisten
+- **Whitelist-Management**: Ausnahmen mit Ablaufdatum, Begründung und Genehmigungsworkflow
+- **Audit-Trail**: Vollständige Nachvollziehbarkeit aller Änderungen und Matches
+- **Multi-Source Screening**: Kombinierte Prüfung mehrerer Sanktionslisten parallel
+- **Monitoring & Alerting**: Prometheus/Grafana-Integration mit Dashboards
+- **Scheduled Runs**: Automatische tägliche/wöchentliche Ausführung mit Reporting
+- **SAP RFC Integration**: Direkter Zugriff auf SAP-Tabellen ohne CSV-Export
+
+### 📊 Zusätzliche Features:
+- **Erweiterte Datenvalidierung**: Zusätzliche Prüfungen für Compliance-Anforderungen
+- **Custom Reporting**: Individuelle Excel-Templates und PDF-Export
+- **E-Mail-Benachrichtigungen**: Automatische Alerts bei kritischen Treffern
+- **Historische Analyse**: Tracking von Änderungen über Zeit
+- **Role-Based Access**: Mehrstufige Freigabe-Workflows (4-Augen-Prinzip)
+
+### ⏱️ Implementierung:
+- **Basis-Erweiterungen** (CLI, Config, Docker): 1-2 Wochen
+- **Standard-Enterprise** (API, Whitelist, Audit): 3-4 Wochen  
+- **Full-Suite** (Monitoring, Multi-Source, Advanced): 4-6 Wochen
+
+### 💰 Investment:
+- Individuelles Angebot basierend auf gewünschten Features
+- Wartung & Support optional verfügbar
+- Schulung und Dokumentation inklusive
+
+**Interesse? Kontaktieren Sie mich für ein unverbindliches Erstgespräch:**  
+📧 Luis@schenk.com | 📞 +49 179 2063144
+
+---
 👤 Autor
 Luis Schenk
 Wirtschaftsjurist | Customs & Trade Compliance Specialist
