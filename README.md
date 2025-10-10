@@ -1,4 +1,4 @@
-markdown# 🏭 SAP Lieferanten-Export & Reporting Tool v2.3
+🏭 SAP Lieferanten-Export & Reporting Tool v2.3
 
 Professionelles Python-Tool für automatisierten SAP-Datenexport mit intelligentem Sanktionscheck, Word-Based Matching und Management-Dashboard.
 
