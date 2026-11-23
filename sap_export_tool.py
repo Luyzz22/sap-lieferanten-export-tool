@@ -90,13 +90,11 @@ def pruefe_sanktionsliste_optimiert(firmenname, sanktionsliste, verbose=False):
     WICHTIG: Mindestens 2 Wörter müssen in der Sanktionsliste sein,
     sonst zu viele False Positives!
     
-    Beispiele:
-    - "Schwarz Group AG" matched "schwarz group" ✓ (2 Wörter)
-    - "Schwarz Industries" matched "schwarz group" ✗ (group fehlt!)
-    - "Mueller Schwarz KG" matched "schwarz group" ✗ (group fehlt!)
-    - "Krüger & Sons GmbH" matched "krüger sons" ✓ (2 Wörter)
-    - "Hartmann Trading" matched "hartmann ag" ✗ (nur 1 Wort nach Stopwörtern!)
-    
+    Beispiele mit rein synthetischen Referenznamen:
+    - "Demo Restriction Alpha GmbH" enthaelt alle Woerter von "Demo Restriction Alpha".
+    - "Demo Restriction Beta" enthaelt nicht das Wort "Alpha".
+    - Einwort-Referenzen werden uebersprungen; das ist eine Prototypgrenze.
+
     Args:
         firmenname: Name der zu prüfenden Firma
         sanktionsliste: Liste von sanktionierten Firmennamen
@@ -122,7 +120,7 @@ def pruefe_sanktionsliste_optimiert(firmenname, sanktionsliste, verbose=False):
             continue
         
         # SCHUTZ: Mindestens 2 Wörter müssen in Sanktionsliste sein
-        # Sonst zu viele False Positives (z.B. nur "Hartmann")
+        # Sonst zu viele False Positives (z.B. nur "Demo")
         if len(sanktion_words) < 2:
             if verbose:
                 log_message(f"ÜBERSPRUNGEN: '{sanktion}' hat nur {len(sanktion_words)} Wort(e) - zu unspezifisch")
@@ -148,8 +146,9 @@ def bestimme_farbkategorie(row):
 
 def hauptprogramm():
     print("=" * 70)
-    print("SAP LIEFERANTEN-EXPORT v2.3 (mit optimiertem Sanktionscheck)")
+    print("SAP CSV-REPORT (Prototyp mit synthetischem Referenzabgleich)")
     print("=" * 70)
+    print("Demo-Referenzliste: keine Aussage ueber reale Sanktionen oder Freigaben.")
     log_message("=== EXPORT GESTARTET ===")
     
     if not os.path.exists(INPUT_CSV):
@@ -162,7 +161,7 @@ def hauptprogramm():
     sanktionsliste = lade_sanktionsliste()
     
     duplikate_vorher = len(df)
-    df = df.drop_duplicates(subset=['Lieferantennr'], keep='first')
+    df = df.drop_duplicates(subset=['Lieferantennr'], keep='first').reset_index(drop=True)
     duplikate_entfernt = duplikate_vorher - len(df)
     
     df['Telefon'] = df['Telefon'].apply(bereinige_telefonnummer)
@@ -191,7 +190,7 @@ def hauptprogramm():
     top_laender = df.groupby('Land').size().reset_index(name='Anzahl').sort_values('Anzahl', ascending=False).head(5)
     
     # Kritische ohne Name/Land
-    kritisch = len(df[(df['Name'] == '') | (df['Land'] == '')])
+    kritisch = len(df[df[['Name', 'Land']].isna().any(axis=1) | df[['Name', 'Land']].eq('').any(axis=1)])
     
     with pd.ExcelWriter(OUTPUT_EXCEL, engine='openpyxl') as writer:
         # SHEET 0: DASHBOARD

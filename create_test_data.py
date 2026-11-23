@@ -7,7 +7,7 @@ laender = [
     'Niederlande', 'Belgien', 'Oesterreich', 'Schweiz', 'Tschechien'
 ]
 
-# Erweiterte Firmenliste (inkl. Sanktionsfirmen)
+# Erweiterte Firmenliste (inkl. synthetische Referenznamen)
 firmen_basis = [
     'Mueller', 'Schmidt', 'Weber', 'Fischer', 'Meyer', 'Wagner', 'Becker',
     'Schulz', 'Hoffmann', 'Schaefer', 'Koch', 'Bauer', 'Richter', 'Klein',
@@ -15,11 +15,11 @@ firmen_basis = [
     'Krueger', 'Hartmann', 'Lange', 'Schmitt', 'Werner', 'Krause', 'Meier'
 ]
 
-# SANKTIONSFIRMEN (müssen häufiger vorkommen)
+# SYNTHETISCHE REFERENZNAMEN (müssen häufiger vorkommen)
 sanktions_firmen = [
-    'Krüger & Sons',
-    'Schwarz Group', 
-    'Hartmann AG'
+    'Demo Restriction Alpha',
+    'Demo Restriction Beta',
+    'Demo Restriction Gamma'
 ]
 
 firmen_suffixe = ['GmbH', 'AG', '& Co', 'KG', 'Industries', 'Automotive', 
@@ -73,7 +73,7 @@ def generiere_testdaten(anzahl=1200):
         # 8% ohne Telefonnummer (zusätzlich)
         telefon_fehlt = random.random() < 0.08
         
-        # Alle 40-50 Einträge eine Sanktionsfirma einfügen
+        # Alle 40-50 Einträge eine synthetischen Referenznamen einfügen
         if i % random.randint(40, 50) == 0 and sanktions_counter < 30:
             firma = random.choice(sanktions_firmen)
             sanktions_counter += 1
@@ -83,7 +83,7 @@ def generiere_testdaten(anzahl=1200):
             else:
                 firma = generiere_firmenname()
                 
-                # Manchmal Variationen der Sanktionsfirmen
+                # Manchmal Variationen der synthetische Referenznamen
                 if random.random() < 0.02:
                     if 'Schwarz' in firma:
                         firma = random.choice(sanktions_firmen)
@@ -108,7 +108,7 @@ def generiere_testdaten(anzahl=1200):
         daten.append(daten[original_idx].copy())
     
     print(f"Generiert: {len(daten)} Datensaetze (inkl. {anzahl_duplikate} Duplikate)")
-    print(f"Sanktionsfirmen eingebaut: ca. {sanktions_counter}")
+    print(f"synthetische Referenznamen eingebaut: ca. {sanktions_counter}")
     
     return daten
 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     print(f"   • Ohne Firmenname:           {anzahl_ohne_name} (~15%)")
     print(f"   • Ohne Telefonnummer:        {anzahl_ohne_telefon} (~8%)")
     print(f"   • Verschiedene Laender:      {df['Land'].nunique()}")
-    print(f"   • Enthaltene Sanktionsfirmen: ~30")
+    print(f"   • Enthaltene synthetische Referenznamen: ~30")
     print("\n🚀 Starte nun das Hauptprogramm mit:")
     print("   python3 sap_export_tool.py")
     print("\n⏱️  Performance-Test mit 1.200 Datensaetzen!")
